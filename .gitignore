@@ -4,3 +4,5 @@ EXPERIMENTS/
 *.npz
 *.pt
 *.csv
+*.wav
+*.mp3
