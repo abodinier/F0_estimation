@@ -1,42 +1,8 @@
 import torch
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 
-def visualize(model, hcqt, salience):
-    predicted_salience = model(hcqt).detach()
-    fig = plt.figure(figsize=(10, 10))
-    n_examples = 3
-    for i in range(n_examples):
-
-        # plot the input
-        plt.subplot(n_examples, 3, 1 + (n_examples * i))
-        # use channel 1 of the hcqt, which corresponds to h=1
-        plt.imshow(hcqt[i, 1, :, :].T, origin="lower", cmap="magma")
-        plt.clim(0, 1)
-        plt.colorbar()
-        plt.title(f"HCQT")
-        plt.axis("tight")
-
-        # plot the target salience
-        plt.subplot(n_examples, 3, 2 + (n_examples * i))
-        plt.imshow(salience[i, :, :, 0].T, origin="lower", cmap="magma")
-        plt.clim(0, 1)
-        plt.colorbar()
-        plt.title("Target")
-        plt.axis("tight")
-
-        # plot the predicted salience
-        plt.subplot(n_examples, 3, 3 + (n_examples * i))
-        plt.imshow(torch.sigmoid(predicted_salience[i, :, :, 0].T), origin="lower", cmap="magma")
-        plt.clim(0, 1)
-        plt.colorbar()
-        plt.title("Prediction")
-        plt.axis("tight")
-
-    plt.tight_layout()
-    return fig
+from utils import visualize
 
 class Trainer:
     def __init__(self, model, train_data, val_data, loss_cls, optimizer, summary_writer, ckp_path, device="cpu"):
