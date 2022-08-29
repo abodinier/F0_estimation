@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-class PaperModel(nn.Module):
+class SalienceNetwork(nn.Module):
     def __init__(self, input_dim=5, output_dim=1):
         super().__init__()
         self.conv1 = nn.Conv2d(input_dim, 128, (5, 5), padding="same")
