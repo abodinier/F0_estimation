@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from model import PaperModel
+from models import PaperModel
 
 import librosa
 import mirdata
