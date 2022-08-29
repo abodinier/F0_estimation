@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-from utils import visualize
+from utils import visualize, evaluate
 
 class Trainer:
     def __init__(self, model, train_data, val_data, loss_cls, optimizer, summary_writer, ckp_path, device="cpu"):
@@ -35,10 +35,17 @@ class Trainer:
             
             self.optimizer.step()
         
+        metrics = evaluate(self.model, self.train_data)
+        for metric_name, values in metrics.items():
+            self.summary_writer.add_scalar(
+                f"train/{metric_name}",
+                np.mean(values),
+                self.epoch
+            )
+        
         return np.array(batch_losses).mean()
     
     def val_step(self):
-        print("here")
         self.model.eval()
         
         batch_losses = []
@@ -53,7 +60,15 @@ class Trainer:
                 out = self.model(x)
                 loss = self.loss_cls(out, y)
                 batch_losses.append(loss.item())
-            
+        
+        metrics = evaluate(self.model, self.val_data)
+        for metric_name, values in metrics.items():
+            self.summary_writer.add_scalar(
+                f"val/{metric_name}",
+                np.mean(values),
+                self.epoch
+            )
+        
         self.summary_writer.add_figure(
             "val/salience_map",
             visualize(self.model, x, y),
