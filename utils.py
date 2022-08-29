@@ -18,6 +18,8 @@ H_RANGE = [0.5, 1, 2, 3, 4]
 
 CQT_FREQUENCIES = librosa.cqt_frequencies(N_BINS, FMIN, BINS_PER_OCTAVE)
 
+mirdata.initialize("medleydb_pitch")
+
 def visualize(model, hcqt, salience, predicted_salience=None, n=3):
     if predicted_salience is None:
         predicted_salience = model(hcqt).detach()
@@ -81,3 +83,59 @@ def get_cqt_times(n_bins):
 def sonify_outputs(save_path, times, freqs, voicing):
     y = mir_eval.sonify.pitch_contour(times, freqs, 8000, amplitudes=voicing)
     soundfile.write(save_path, y, 8000)
+
+
+def extract_freqs(transition_matrix, times, salience_2D):
+    pitch = librosa.sequence.viterbi(salience_2D.T, transition_matrix)
+    
+    pitch_hz = np.array([CQT_FREQUENCIES[f] for f in pitch])
+    salience_1D = np.array(
+        [salience_2D[i, f] for i, f in enumerate(pitch)]
+    )
+    
+    estimated_f0 = mirdata.annotations.F0Data(
+        times, "s", pitch_hz, "hz", salience_1D, "likelihood"
+    )
+    return estimated_f0.to_mir_eval()
+
+
+def evaluate(model, data):
+    model.eval()
+    
+    times_s = get_cqt_times(N_TIME_FRAMES)
+    transition_matrix = librosa.sequence.transition_local(N_BINS, len(H_RANGE))
+
+    results = {}
+
+    for batch in data:
+        hcqt, target_saliences = batch
+        target_saliences = torch.transpose(target_saliences, 0, 2)
+        target_saliences = target_saliences[:, :, :, 0].T.detach().numpy().astype(float)
+        
+        predicted_saliences = model.predict(hcqt).detach().numpy().astype(float)[:, :, :, 0]
+        
+        for predicted_salience, target_salience in zip(
+            predicted_saliences, target_saliences
+        ):
+            est_times, est_freqs, est_voicing = extract_freqs(
+                transition_matrix,
+                times_s,
+                predicted_salience
+            )
+            target_times, target_freqs, target_voicing = extract_freqs(
+                transition_matrix,
+                times_s,
+                target_salience
+            )
+            
+            res = mir_eval.melody.evaluate(
+                    target_times, target_freqs, est_times, est_freqs, est_voicing=est_voicing
+                )
+            
+            for k, v in res.items():
+                if k in results:
+                    results[k].append(v)
+                else:
+                    results[k] = [v,]
+    
+    return results
