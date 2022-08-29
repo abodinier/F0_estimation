@@ -23,7 +23,8 @@ mirdata.initialize("medleydb_pitch")
 def visualize(model, hcqt, salience, predicted_salience=None, n=3):
     if predicted_salience is None:
         predicted_salience = model(hcqt).detach()
-    fig = plt.figure(figsize=(8, 4))
+    
+    fig = plt.figure(figsize=(15, 10))
     
     for i in range(n):
 
