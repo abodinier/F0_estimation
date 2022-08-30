@@ -111,62 +111,68 @@ class HarmonicFilter(nn.Module):
         self.n_harmonic = n_harmonic
         self.semitone_scale = semitone_scale
         
-        # BW estimation as in the paper: DATA-DRIVEN HARMONIC FILTERS FOR AUDIO REPRESENTATION LEARNING [Minz Won, 2020]
+        # BW estimation with learnable parameters as in the paper: DATA-DRIVEN HARMONIC FILTERS FOR AUDIO REPRESENTATION LEARNING [Minz Won, 2020]
         self.bw_alpha = nn.Parameter(torch.tensor([0.1079]), requires_grad=True)
         self.bw_beta = nn.Parameter(torch.tensor([24.7]), requires_grad=True)
         self.bw_Q = nn.Parameter(torch.tensor([1.]), requires_grad=True)
 
-        # First we compute STFT of audio signal:
+        # First we compute STFT:
         self.spectrogram = lambda X: torch.tensor(
             [
-                librosa.stft(
+                np.abs(librosa.stft(
                     x, 
                     n_fft=n_fft,
                     window="hann"
-                )
+                ))
             for x in X],
             dtype=torch.float
         )
-        self.amplitude_to_db = librosa.amplitude_to_db
-
+        # STFT dimension = (n_freq_bins, n_frames) with: n_freq_bins = (1 + n_ftt / 2) and n_frames = (1 + (n_samples - window_size) / hop_size)
+        # In our dataset, n_samples = 25600 (corresponds to 1.6 s length samples at 22050Hz), so, n_frames = 101 and n_freq_bins = 513
+        
+        self.amplitude_to_db = AmplitudeToDB()
+        
         harmonic_hz, self.level = get_Fcs(
             n_harmonic, semitone_scale
         )
 
-        self.f0 = torch.tensor(harmonic_hz)  # shape (n_band,)
-        self.zero = torch.zeros(1)
-        self.fft_bins = torch.linspace(0, self.sample_rate // 2, n_fft)
+        self.f0 = torch.tensor(harmonic_hz)  # shape (840,)
 
     def get_filterbank(self):
         # Compute bandwith for each filter
         bw = (self.bw_alpha * self.f0 + self.bw_beta) / self.bw_Q
-        bw = bw.unsqueeze(0)  # (1, n_band)
+        bw = bw.unsqueeze(0)  # (1, 840)
         
-        f0 = self.f0.unsqueeze(0)  # (1, n_band)
+        f0 = self.f0.unsqueeze(0)  # (1, 840)
         
-        fft_bins = self.fft_bins.unsqueeze(1)  # (n_bins, 1)
+        fft_bins = self.fft_bins.unsqueeze(1)  # (257, 1)
 
         # Triangular filter
-        left_slope = torch.matmul(fft_bins, (2 / bw)) + 1 - (2 * f0 / bw)
-        right_slope = torch.matmul(fft_bins, (-2 / bw)) + 1 + (2 * f0 / bw)
+        left_slope = torch.matmul(fft_bins, (2 / bw)) + 1 - (2 * f0 / bw)  # (257, 840)
+        right_slope = torch.matmul(fft_bins, (-2 / bw)) + 1 + (2 * f0 / bw)  # (257, 840)
         
-        fb = torch.max(self.zero, torch.min(right_slope, left_slope))
+        fb = torch.max(torch.tensor(0), torch.min(right_slope, left_slope))  # (257, 840)
         return fb
 
     def forward(self, waveform):
-        spectrogram = torch.tensor(self.spectrogram(waveform), dtype=torch.float)
+        spectrogram = torch.tensor(self.spectrogram(waveform), dtype=torch.float)  # (batch, 257, 196)
+        n_freq_bins = spectrogram.shape[1]
 
-        harmonic_fb = self.get_filterbank()
+        # fft bins
+        self.fft_bins = torch.linspace(0, self.sample_rate // 2, n_freq_bins)
+
+        harmonic_fb = self.get_filterbank()  # (513, 840)
         
         # Compute "Mel Spectrogram" equivalent
-        harmonic_spec = torch.matmul(spectrogram, harmonic_fb)
+        harmonic_spec = torch.matmul(spectrogram.transpose(1, 2), harmonic_fb).transpose(1, 2)  # (batch, 840, 101)
 
         batch, channels, length = harmonic_spec.size()
-        harmonic_spec = harmonic_spec.view(batch, self.n_harmonic, self.level, length)
+        harmonic_spec = harmonic_spec.view(batch, self.n_harmonic, self.level, length)  # (batch, 6, 140, 101)
         # To dB
         harmonic_spec = self.amplitude_to_db(harmonic_spec)
         
         return harmonic_spec
+
 
 class Frontend(nn.Module):
     def __init__(
