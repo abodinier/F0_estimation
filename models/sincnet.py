@@ -190,10 +190,9 @@ class Frontend(nn.Module):
             n_harmonic=n_harmonic,
             semitone_scale=semitone_scale,
         )
-        self.bn = nn.BatchNorm2d(n_harmonic)
     
     def forward(self, x):
-        return self.bn(self.HFilter(x))
+        return self.HFilter(x)
 
 
 class Backend(nn.Module):
