@@ -51,7 +51,7 @@ def get_Fcs(n_harmonic, semitone_scale=2, low_midi=24, high_midi=94):
 
     harmonic_hz = []
     for i in range(n_harmonic):
-        harmonic_hz = np.concatenate((harmonic_hz, hz * (i+1)), dtype=np.float32)
+        harmonic_hz = np.concatenate((harmonic_hz, hz * (i+1)), dtype=np.float32)  # shape ( 6*level,) = (n_bands,)
 
     return harmonic_hz, level
 
