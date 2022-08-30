@@ -195,18 +195,6 @@ class Frontend(nn.Module):
         return self.bn(self.HFilter(x))
 
 
-class Conv(torch.nn.Module):
-    def __init__(self, in_channels, out_channels, kernel, padding="same"):
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel, padding)
-        self.bn = nn.BatchNorm2d(out_channels)
-        self.relu = nn.ReLU()
-    
-    def forward(self, x):
-        x = self.conv(x)
-        x = self.bn(x)
-        x = self.relu(x)
-        return x
-
 class Backend(nn.Module):
     def __init__(self, input_channels, output_channels):
         super().__init__()
