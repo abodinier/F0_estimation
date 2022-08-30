@@ -1,14 +1,9 @@
-# coding: utf-8
-import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import librosa
-from torch.autograd import Variable
-
 import math
-import sys
-import re
+import torch
+import librosa
+import numpy as np
+import torch.nn as nn
+
 
 
 def F_hz2midi(freq, tuning_hz=440, eps=1e-9): 
