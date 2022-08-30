@@ -56,6 +56,18 @@ def get_Fcs(n_harmonic, semitone_scale=2, low_midi=24, high_midi=94):
     return harmonic_hz, level
 
 
+class AmplitudeToDB(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.multiplier = 10.0
+        self.amin = 1e-6
+        self.ref_value = 1.0
+        self.db_multiplier = math.log10(max(self.amin, self.ref_value))
+
+    def forward(self, x):
+        x_db = self.multiplier * torch.log10(torch.clamp(x, min=self.amin))
+        x_db -= self.multiplier * self.db_multiplier
+        return x_db
 class HarmonicFilter(nn.Module):
     def __init__(
         self,
