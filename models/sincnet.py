@@ -251,12 +251,7 @@ class Backend(nn.Module):
 class HarmonicCNN(nn.Module):
     def __init__(self,
                 sample_rate=22050,
-                n_channels=128,
                 n_fft=512,
-                f_min=0.0,
-                f_max=8000.0,
-                n_mels=128,
-                n_class=50,
                 n_harmonic=6,
                 semitone_scale=2):
         super().__init__()
