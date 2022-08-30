@@ -4,14 +4,14 @@ import librosa
 import numpy as np
 import torch.nn as nn
 
-
-
 def F_hz2midi(freq, tuning_hz=440, eps=1e-9): 
-    """
-    convert frequency in Hz to midi value (440Hz -> midi=69)
+
+
+    Returns:
+        float: MIDI note
     """
     
-    return 12*np.log2((freq+eps)/tuning_hz) + 69
+    return 12 * np.log2( (freq + eps) / tuning_hz) + 69
 
 
 def F_midi2hz(midi, tuning_hz=440): 
