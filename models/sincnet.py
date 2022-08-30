@@ -252,9 +252,25 @@ class HarmonicCNN(nn.Module):
         return x
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
     sample_rate = 22050
     n_harmonic = 6
-    hf = HarmonicFilter(n_harmonic=n_harmonic)
-    x = np.random.rand(25000)[np.newaxis, :]
-    out = hf.spectrogram(x)
-    print(out.shape)
+    length = 25600
+    
+    path = "/Users/alexandre/mir_datasets/medleydb_pitch/audio/AClassicEducation_NightOwl_STEM_08.wav"
+    
+    song, _ = librosa.load(path, sr=sample_rate)
+    
+    start_idx = np.random.choice(np.arange(song.shape[0] - length))
+    print(start_idx)
+    x = song[start_idx: start_idx + length]
+    x = x[np.newaxis, :]
+    
+    hf = HarmonicFilter(n_harmonic=n_harmonic, n_fft=1024)
+    print(hf.spectrogram(x).shape)
+    y = hf(x).detach().numpy()
+    print(y.shape)
+    plt.imshow(y[0, 0, :, :], origin="lower", cmap="magma", aspect='auto')
+    plt.colorbar()
+    plt.show()
+    
