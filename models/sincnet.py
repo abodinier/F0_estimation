@@ -33,12 +33,18 @@ def F_midi2hz(midi, tuning_hz=440):
     return tuning_hz * (2**((midi - 69)/12))
 
 
-def get_Fcs(
-    n_harmonic,
-    semitone_scale=2, 
-    low_midi=24,  # C1 note as in the paper
-    high_midi=94  # sr / 2H = 93,74
-    ):
+def get_Fcs(n_harmonic, semitone_scale=2, low_midi=24, high_midi=94):
+    """Get bands center frequency
+
+    Args:
+        n_harmonic (int): Number of harmonics
+        semitone_scale (int, optional): Semitone scale. Defaults to 2.
+        low_midi (int, optional): Lowest MIDI note of the spectrum. Defaults to 24 as in the paper (corresponding to C1 note).
+        high_midi (int, optional): _description_. Defaults to 94 (MIDI note of the frequency: sample_rate / 2H).
+
+    Returns:
+        list: List of bands center frequencies. Number of bands = n_harmonic * (high_midi - low_midi) * semitone_scale
+    """
     level = int((high_midi - low_midi) * semitone_scale)
     midi = np.linspace(low_midi, high_midi, level + 1)
     hz = F_midi2hz(midi[:-1])
