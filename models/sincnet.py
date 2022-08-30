@@ -93,7 +93,7 @@ class HarmonicFilter(nn.Module):
     def __init__(
         self,
         sample_rate=22050,
-        n_fft=512,
+        n_fft=1024,
         n_harmonic=6,
         semitone_scale=2,  # Quarter note
         ):
