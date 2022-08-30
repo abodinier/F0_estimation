@@ -108,6 +108,7 @@ class HarmonicFilter(nn.Module):
 
         self.sample_rate = sample_rate
         self.n_fft = n_fft
+        self.sample_rate = sample_rate
         self.n_harmonic = n_harmonic
         self.semitone_scale = semitone_scale
         
