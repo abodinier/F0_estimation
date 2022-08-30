@@ -68,6 +68,24 @@ class AmplitudeToDB(torch.nn.Module):
         x_db = self.multiplier * torch.log10(torch.clamp(x, min=self.amin))
         x_db -= self.multiplier * self.db_multiplier
         return x_db
+
+
+class Conv(torch.nn.Module):
+    """
+    Custom convolution operation with BatchNorm and ReLU
+    """
+    def __init__(self, in_channels, out_channels, kernel, padding="same"):
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel, padding)
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU()
+    
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.bn(x)
+        x = self.relu(x)
+        return x
+
+
 class HarmonicFilter(nn.Module):
     def __init__(
         self,
