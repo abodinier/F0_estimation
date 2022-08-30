@@ -5,7 +5,12 @@ import numpy as np
 import torch.nn as nn
 
 def F_hz2midi(freq, tuning_hz=440, eps=1e-9): 
+    """Convert frequency in Hz to its MIDI representation
 
+    Args:
+        freq (float): Frequency in Hz
+        tuning_hz (float, optional): Reference tuning frequency in Hz. Defaults to 440.
+        eps (float, optional): eps for numerical stability. Defaults to 1e-9.
 
     Returns:
         float: MIDI note
@@ -15,8 +20,14 @@ def F_hz2midi(freq, tuning_hz=440, eps=1e-9):
 
 
 def F_midi2hz(midi, tuning_hz=440): 
-    """
-    convert midi value to Hz (midi=69 -> 440Hz)
+    """Convert MIDI note to the corresponding frequency in Hz
+
+    Args:
+        midi (float): MIDI note
+        tuning_hz (float, optional): Reference tuning. Defaults to 440.
+
+    Returns:
+        float: Frequency in Hz
     """
     
     return tuning_hz * (2**((midi - 69)/12))
