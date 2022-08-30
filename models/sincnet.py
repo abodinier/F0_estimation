@@ -87,6 +87,9 @@ class Conv(torch.nn.Module):
 
 
 class HarmonicFilter(nn.Module):
+    """
+    Harmonic Filter layer with learnable parameters
+    """
     def __init__(
         self,
         sample_rate=22050,
@@ -94,6 +97,13 @@ class HarmonicFilter(nn.Module):
         n_harmonic=6,
         semitone_scale=2,  # Quarter note
         ):
+        """
+        Args:
+            sample_rate (int, optional): Sample rate in Hz. Defaults to 22050.
+            n_fft (int, optional): Number of frequency bins. Defaults to 512. The number of rows of the STFT transform is (1 + n_fft // 2)
+            n_harmonic (int, optional): Number of harmonics. Defaults to 6.
+            semitone_scale (int, optional): Semitone scale. Defaults to 2. Resolution increases with semitone_scale.
+        """
         super().__init__()
 
         self.sample_rate = sample_rate
