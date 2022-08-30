@@ -17,6 +17,14 @@ N_TIME_FRAMES = 50  # 1.16 seconds
 H_RANGE = [0.5, 1, 2, 3, 4]
 
 CQT_FREQUENCIES = librosa.cqt_frequencies(N_BINS, FMIN, BINS_PER_OCTAVE)
+TRANSITION_MATRIX = librosa.sequence.transition_local(N_BINS, len(H_RANGE))
+
+
+def get_cqt_times(n_bins):
+    return librosa.frames_to_time(np.arange(n_bins), sr=TARGET_SR, hop_length=HOP_LENGTH)
+
+
+TIMES_S = get_cqt_times(N_TIME_FRAMES)
 
 mirdata.initialize("medleydb_pitch")
 
@@ -77,10 +85,6 @@ def compute_hcqt(audio):
     return hcqt.transpose([0, 2, 1])
 
 
-def get_cqt_times(n_bins):
-    return librosa.frames_to_time(np.arange(n_bins), sr=TARGET_SR, hop_length=HOP_LENGTH)
-
-
 def sonify_outputs(save_path, times, freqs, voicing):
     y = mir_eval.sonify.pitch_contour(times, freqs, 8000, amplitudes=voicing)
     soundfile.write(save_path, y, 8000)
@@ -102,9 +106,6 @@ def extract_freqs(transition_matrix, times, salience_2D):
 
 def evaluate(model, data):
     model.eval()
-    
-    times_s = get_cqt_times(N_TIME_FRAMES)
-    transition_matrix = librosa.sequence.transition_local(N_BINS, len(H_RANGE))
 
     results = {}
 
@@ -119,13 +120,13 @@ def evaluate(model, data):
             predicted_saliences, target_saliences
         ):
             est_times, est_freqs, est_voicing = extract_freqs(
-                transition_matrix,
-                times_s,
+                TRANSITION_MATRIX,
+                TIMES_S,
                 predicted_salience
             )
             target_times, target_freqs, target_voicing = extract_freqs(
-                transition_matrix,
-                times_s,
+                TRANSITION_MATRIX,
+                TIMES_S,
                 target_salience
             )
             
