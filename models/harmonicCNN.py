@@ -213,7 +213,7 @@ class Backend(nn.Module):
         self.conv5 = nn.Conv2d(64, 8, (3, 3), padding="same")
         self.bn5 = nn.BatchNorm2d(8)
         
-        self.conv6 = nn.Conv2d(8, 1, (3, 3), padding="same")
+        self.conv6 = nn.Conv2d(8, 1, (140, 52), padding="valid", stride=(1, 1))
         
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
@@ -240,10 +240,9 @@ class Backend(nn.Module):
         x = self.bn5(x)
         x = self.relu(x)
         
-        x = self.conv6(x)  # (batch, 1, time, freq)
+        x = self.conv6(x)  # (batch, 1, 50, 1)
         
-        x = torch.transpose(x, 1, 3)
-        x = torch.transpose(x, 1, 2)
+        x = x[:, 0, 0, :]  # (batch, 50)
         
         return x
 
