@@ -28,7 +28,7 @@ class Trainer:
             y.to(self.device)
             
             out = self.model(x)
-            loss = self.loss_cls(out, y)
+            loss = self.loss_cls(input=out, target=y)
             batch_losses.append(loss.item())
             
             loss.backward()
