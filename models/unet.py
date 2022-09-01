@@ -67,9 +67,11 @@ class Conv(nn.Module):
 
 
 class UNet(nn.Module):
-    def __init__(self, input_channels, residual=False):
+    def __init__(self, input_channels, residual=False, bilinear_interp=False):
         super().__init__()
         self.residual = residual
+        self.bilinear_interp = bilinear_interp
+        
         # Be careful, shape of x: (batch, channels, times, freq_bins)
         self.head = nn.Sequential(
             Conv(input_channels, 16, k=(5, 5), residual=residual),
@@ -81,10 +83,10 @@ class UNet(nn.Module):
         self.down3 = DownConv(128, 256, k=(3, 3), residual=residual)
         self.down4 = DownConv(256, 256, k=(3, 3), residual=residual)
 
-        self.up4 = UpConv(512, 128, k=(3, 3), residual=residual)
-        self.up3 = UpConv(256, 64, k=(3, 3), residual=residual)
-        self.up2 = UpConv(128, 32, k=(3, 3), residual=residual)
-        self.up1 = UpConv(64, 32, k=(3, 3), residual=residual)
+        self.up4 = UpConv(512, 128, k=(3, 3), residual=residual, bilinear_interp=bilinear_interp)
+        self.up3 = UpConv(256, 64, k=(3, 3), residual=residual, bilinear_interp=bilinear_interp)
+        self.up2 = UpConv(128, 32, k=(3, 3), residual=residual, bilinear_interp=bilinear_interp)
+        self.up1 = UpConv(64, 32, k=(3, 3), residual=residual, bilinear_interp=bilinear_interp)
 
         self.tail = nn.Sequential(
             Conv(32, 16, k=(3, 70), residual=residual),  # context window larger along the frequency axis 
