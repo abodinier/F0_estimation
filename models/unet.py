@@ -78,7 +78,12 @@ class UNet(nn.Module):
         self.up2 = UpConv(128, 32)
         self.up1 = UpConv(64, 32)
 
-        self.tail = Conv(32, 1)
+        self.tail = nn.Sequential(
+            Conv(32, 16, k=(3, 70), residual=residual),  # context window larger along the frequency axis 
+            Conv(16, 1, k=(1, 1), residual=residual)
+        )
+        
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x0 = self.head(x)
