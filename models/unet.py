@@ -5,9 +5,9 @@ from torch.nn import functional as F
 DEFAULT_KERNEL_SIZE = (3, 3)
 
 class DownConv(nn.Module):
-    def __init__(self, input_channels, output_channels, k=DEFAULT_KERNEL_SIZE):
+    def __init__(self, input_channels, output_channels, k=DEFAULT_KERNEL_SIZE, residual=False):
         super().__init__()
-        self.conv = Conv(input_channels, output_channels, k=k)
+        self.conv = Conv(input_channels, output_channels, k=k, residual=residual)
         self.pooling = nn.MaxPool2d(2)
 
     def forward(self, x):
@@ -17,13 +17,13 @@ class DownConv(nn.Module):
     
     
 class UpConv(nn.Module):
-    def __init__(self, input_channels, output_channels, k=DEFAULT_KERNEL_SIZE, bilinear_interp=True):
+    def __init__(self, input_channels, output_channels, k=DEFAULT_KERNEL_SIZE, bilinear_interp=True, residual=False):
         super().__init__()
         self.bilinear_interp = bilinear_interp
 
         self.up = nn.ConvTranspose2d(input_channels // 2, input_channels // 2, 2, stride=2)
 
-        self.conv = Conv(input_channels, output_channels, k=k)
+        self.conv = Conv(input_channels, output_channels, k=k, residual=residual)
 
     def forward(self, x_small, x_big):
         if self.bilinear_interp:
@@ -51,32 +51,40 @@ class UpConv(nn.Module):
     
     
 class Conv(nn.Module):
-    def __init__(self, input_channels, output_channels, k=(3, 3)):
+    def __init__(self, input_channels, output_channels, k=(3, 3), residual=None):
         super().__init__()
-        self.conv = nn.Sequential(
-            nn.Conv2d(input_channels, output_channels, k, padding="same"),
-            nn.BatchNorm2d(output_channels),
-            nn.ReLU(inplace=True),
-        )
+        self.residual = residual
+        self.conv = nn.Conv2d(input_channels, output_channels, k, padding="same")
+        self.bn = nn.BatchNorm2d(output_channels)
+        self.activation = nn.ReLU(inplace=True)
 
     def forward(self, x):
-        x = self.conv(x)
-        return x
+        conv = self.conv(x)
+        if self.residual:
+            conv += x
+        conv = self.bn(conv)
+        return conv
+
 
 class UNet(nn.Module):
-    def __init__(self, input_channels):
-        super(UNet, self).__init__()
-        self.head = Conv(input_channels, 32, k=(10, 5))
+    def __init__(self, input_channels, residual=False):
+        super().__init__()
+        self.residual = residual
+        # Be careful, shape of x: (batch, channels, times, freq_bins)
+        self.head = nn.Sequential(
+            Conv(input_channels, 16, k=(5, 5), residual=residual),
+            Conv(16, 32, k=(5, 5), residual=residual)
+        )
 
-        self.down1 = DownConv(32, 64)
-        self.down2 = DownConv(64, 128)
-        self.down3 = DownConv(128, 256)
-        self.down4 = DownConv(256, 256)
+        self.down1 = DownConv(32, 64, k=(5, 5), residual=residual)
+        self.down2 = DownConv(64, 128, k=(3, 3), residual=residual)
+        self.down3 = DownConv(128, 256, k=(3, 3), residual=residual)
+        self.down4 = DownConv(256, 256, k=(3, 3), residual=residual)
 
-        self.up4 = UpConv(512, 128)
-        self.up3 = UpConv(256, 64)
-        self.up2 = UpConv(128, 32)
-        self.up1 = UpConv(64, 32)
+        self.up4 = UpConv(512, 128, k=(3, 3), residual=residual)
+        self.up3 = UpConv(256, 64, k=(3, 3), residual=residual)
+        self.up2 = UpConv(128, 32, k=(3, 3), residual=residual)
+        self.up1 = UpConv(64, 32, k=(3, 3), residual=residual)
 
         self.tail = nn.Sequential(
             Conv(32, 16, k=(3, 70), residual=residual),  # context window larger along the frequency axis 
@@ -100,16 +108,24 @@ class UNet(nn.Module):
 
         x = self.tail(u1)
         
+        # Rearrange output to the shape (batch, freq_bins, times, channels) with channels=1
         x = torch.transpose(x, 1, 3)
         x = torch.transpose(x, 1, 2)
 
+        return x
+    
+    def predict(self, x):
+        x = self.forward(x)
+        x = self.sigmoid(x)
+        
         return x
 
 
 if __name__ == "__main__":
     import numpy as np
     x = torch.tensor(np.load("/Users/alexandre/mir_datasets/medleydb_pitch/DATA/HCQT_SALIENCE/small_train/0-136.npz")["hcqt"][np.newaxis, :, :, :])
-    model = UNet(x.shape[1])
+    x.shape
+    model = UNet(x.size(1))
     out = model(x)
-    out[0, 0, :, :]
+    out[0, :, :, 0]
     print(out.shape)
