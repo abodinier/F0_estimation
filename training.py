@@ -16,6 +16,7 @@ class Trainer:
         self.ckp_path = ckp_path
         
     def train_step(self):
+        self.model.to(self.device)
         self.model.train()
         
         batch_losses = []
@@ -46,6 +47,7 @@ class Trainer:
         return np.array(batch_losses).mean()
     
     def val_step(self):
+        self.model.to(self.device)
         self.model.eval()
         
         batch_losses = []
