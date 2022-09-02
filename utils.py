@@ -7,13 +7,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 TARGET_SR = 22050
-BINS_PER_SEMITONE = 3
+BINS_PER_SEMITONE = 5
 N_OCTAVES = 6
 FMIN = 32.7
 BINS_PER_OCTAVE = 12 * BINS_PER_SEMITONE
 N_BINS = N_OCTAVES * BINS_PER_OCTAVE
-HOP_LENGTH = 512  # 23 ms hop
-N_TIME_FRAMES = 50  # 1.16 seconds
+HOP_LENGTH = 256  # 11 ms hop
+N_TIME_FRAMES = 50  
 H_RANGE = [0.5, 1, 2, 3, 4]
 
 CQT_FREQUENCIES = librosa.cqt_frequencies(N_BINS, FMIN, BINS_PER_OCTAVE)
