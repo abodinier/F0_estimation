@@ -9,11 +9,11 @@ import numpy as np
 TARGET_SR = 22050
 BINS_PER_SEMITONE = 5
 N_OCTAVES = 6
-FMIN = 32.7
+FMIN = 32.7  # f_min
 BINS_PER_OCTAVE = 12 * BINS_PER_SEMITONE
 N_BINS = N_OCTAVES * BINS_PER_OCTAVE
-HOP_LENGTH = 512  # 23 ms hop
-N_TIME_FRAMES = 50  # 1.16 seconds
+HOP_LENGTH = 256  # 11 ms hop (window size = hop_length // 4 & the larger the window the more accurate in frequency)
+N_TIME_FRAMES = 50
 N_AUDIO_SAMPLES = HOP_LENGTH * N_TIME_FRAMES
 N_EXAMPLES_PER_TRACK = 100
 
