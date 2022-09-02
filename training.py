@@ -25,8 +25,8 @@ class Trainer:
             self.optimizer.zero_grad()
             
             (x, y) = batch
-            x.to(self.device)
-            y.to(self.device)
+            x = x.to(self.device)
+            y = y.to(self.device)
             
             out = self.model(x)
             loss = self.loss_cls(input=out, target=y)
@@ -56,8 +56,8 @@ class Trainer:
             for batch_id, batch in enumerate(self.val_data):
                 
                 (x, y) = batch
-                x.to(self.device)
-                y.to(self.device)
+                x = x.to(self.device)
+                y = y.to(self.device)
                 
                 out = self.model(x)
                 loss = self.loss_cls(input=out, target=y)
