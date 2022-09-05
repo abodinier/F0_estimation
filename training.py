@@ -63,19 +63,20 @@ class Trainer:
                 loss = self.loss_cls(input=out, target=y)
                 batch_losses.append(loss.item())
         
-        metrics = evaluate(self.model, self.val_data)
-        for metric_name, values in metrics.items():
-            self.summary_writer.add_scalar(
-                f"val/{metric_name}",
-                np.mean(values),
+            metrics = evaluate(self.model, self.val_data)
+            for metric_name, values in metrics.items():
+                self.summary_writer.add_scalar(
+                    f"val/{metric_name}",
+                    np.mean(values),
+                    self.epoch
+                )
+            
+            self.summary_writer.add_figure(
+                "val/salience_map",
+                visualize(self.model, x.to("cpu"), y.to("cpu")),
                 self.epoch
             )
         
-        self.summary_writer.add_figure(
-            "val/salience_map",
-            visualize(self.model, x.to("cpu"), y.to("cpu")),
-            self.epoch
-        )
         return np.array(batch_losses).mean()
 
     def train(self, n_epochs):
