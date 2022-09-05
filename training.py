@@ -73,7 +73,7 @@ class Trainer:
         
         self.summary_writer.add_figure(
             "val/salience_map",
-            visualize(self.model, x, y),
+            visualize(self.model, x.to("cpu"), y.to("cpu")),
             self.epoch
         )
         return np.array(batch_losses).mean()

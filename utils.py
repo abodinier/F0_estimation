@@ -106,6 +106,7 @@ def extract_freqs(transition_matrix, times, salience_2D):
 
 def evaluate(model, data):
     model.eval()
+    model.to("cpu")
 
     results = {}
 
