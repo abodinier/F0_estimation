@@ -110,35 +110,32 @@ def evaluate(model, data):
 
     results = {}
 
-    for batch in data:
-        hcqt, target_saliences = batch
-        target_saliences = torch.transpose(target_saliences, 0, 2)
-        target_saliences = target_saliences[:, :, :, 0].T.detach().numpy().astype(float)
+    hcqt, target_saliences = data
+    target_saliences = torch.transpose(target_saliences, 0, 2)
+    target_saliences = target_saliences[:, :, :, 0].T.detach().numpy().astype(float)
+    
+    predicted_saliences = model.predict(hcqt).detach().numpy().astype(float)[:, :, :, 0]
+    
+    for predicted_salience, target_salience in zip(predicted_saliences, target_saliences):
+        est_times, est_freqs, est_voicing = extract_freqs(
+            TRANSITION_MATRIX,
+            TIMES_S,
+            predicted_salience
+        )
+        target_times, target_freqs, target_voicing = extract_freqs(
+            TRANSITION_MATRIX,
+            TIMES_S,
+            target_salience
+        )
         
-        predicted_saliences = model.predict(hcqt).detach().numpy().astype(float)[:, :, :, 0]
+        res = mir_eval.melody.evaluate(
+                target_times, target_freqs, est_times, est_freqs, est_voicing=est_voicing
+            )
         
-        for predicted_salience, target_salience in zip(
-            predicted_saliences, target_saliences
-        ):
-            est_times, est_freqs, est_voicing = extract_freqs(
-                TRANSITION_MATRIX,
-                TIMES_S,
-                predicted_salience
-            )
-            target_times, target_freqs, target_voicing = extract_freqs(
-                TRANSITION_MATRIX,
-                TIMES_S,
-                target_salience
-            )
-            
-            res = mir_eval.melody.evaluate(
-                    target_times, target_freqs, est_times, est_freqs, est_voicing=est_voicing
-                )
-            
-            for k, v in res.items():
-                if k in results:
-                    results[k].append(v)
-                else:
-                    results[k] = [v,]
+        for k, v in res.items():
+            if k in results:
+                results[k].append(v)
+            else:
+                results[k] = [v,]
     
     return results

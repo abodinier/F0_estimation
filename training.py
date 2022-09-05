@@ -36,13 +36,18 @@ class Trainer:
             
             self.optimizer.step()
         
-        metrics = evaluate(self.model, self.train_data)
-        for metric_name, values in metrics.items():
-            self.summary_writer.add_scalar(
-                f"train/{metric_name}",
-                np.mean(values),
-                self.epoch
-            )
+        with torch.no_grad():
+            train_data_sample = self.train_data.__iter__()._next_data()
+            indices = torch.randperm(train_data_sample[0].size(0))[:32]
+            xtrain, ytrain = train_data_sample[0][indices], train_data_sample[1][indices]
+            
+            metrics = evaluate(self.model, (xtrain, ytrain))
+            for metric_name, values in metrics.items():
+                self.summary_writer.add_scalar(
+                    f"train/{metric_name}",
+                    np.mean(values),
+                    self.epoch
+                )
         
         return np.array(batch_losses).mean()
     
@@ -63,7 +68,11 @@ class Trainer:
                 loss = self.loss_cls(input=out, target=y)
                 batch_losses.append(loss.item())
         
-            metrics = evaluate(self.model, self.val_data)
+            val_data_sample = self.val_data.__iter__()._next_data()
+            indices = torch.randperm(val_data_sample[0].size(0))[:32]
+            xval, yval = val_data_sample[0][indices], val_data_sample[1][indices]
+            
+            metrics = evaluate(self.model, (xval, yval))
             for metric_name, values in metrics.items():
                 self.summary_writer.add_scalar(
                     f"val/{metric_name}",
@@ -73,7 +82,7 @@ class Trainer:
             
             self.summary_writer.add_figure(
                 "val/salience_map",
-                visualize(self.model, x.to("cpu"), y.to("cpu")),
+                visualize(self.model, xval, yval),
                 self.epoch
             )
         
