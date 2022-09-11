@@ -11,6 +11,8 @@ from torch.nn import BCEWithLogitsLoss
 from torch.optim import Adam
 
 class Trainer:
+    """Training class in charge of training, checkpoint, loading and performance logging.
+    """
     def __init__(self, model, train_data, val_data, loss_cls, optimizer, ckp_path=None, summary_writer=None, device="cpu"):
         self.model = model
         self.train_data = train_data
@@ -101,6 +103,11 @@ class Trainer:
         return np.array(batch_losses).mean()
 
     def train(self, n_epochs):
+        """Train method
+
+        Args:
+            n_epochs (int): Number of epochs
+        """
         self.model.to(self.device)
         
         while self.epoch < n_epochs:
@@ -143,6 +150,14 @@ class Trainer:
     
     @staticmethod
     def load_from_cfg(cfg):
+        """Create a Trainer instance from config file
+
+        Args:
+            cfg (dict): Config file
+
+        Returns:
+            Trainer: Trainer instance
+        """
         model_path = cfg["MODEL_PATH"]
         model = load_from_dir(model_path)
         

@@ -29,6 +29,18 @@ TIMES_S = get_cqt_times(N_TIME_FRAMES)
 mirdata.initialize("medleydb_pitch")
 
 def visualize(model, hcqt, salience, predicted_salience=None, n=3):
+    """Visualize HCQT input, target and predicted salience
+
+    Args:
+        model (nn.Module): model
+        hcqt (np.ndarray): hcqt input tensor of shape (batch_size, n_time_frames, freq_bins)
+        salience (np.ndarray): target salience
+        predicted_salience (np.ndarray, optional): Predicted salience. Defaults to None.
+        n (number of examples, optional): Number of examples. Defaults to 3.
+
+    Returns:
+        plt figure: figure
+    """
     if predicted_salience is None:
         predicted_salience = model(hcqt).detach()
     
@@ -71,6 +83,14 @@ def load_audio(audio_path):
 
 
 def compute_hcqt(audio):
+    """Compue HCQT representation given an audio file
+
+    Args:
+        audio (np.ndarray): Audio file
+
+    Returns:
+        np.ndarray: HCQT representation of shape (n_harmonics, n_time_frames, n_freq_bins)
+    """
     cqt = librosa.cqt(
         audio,
         sr=TARGET_SR,
@@ -105,6 +125,15 @@ def extract_freqs(transition_matrix, times, salience_2D):
 
 
 def evaluate(model, data):
+    """Evaluation function that computres
+
+    Args:
+        model (nn.module): NN model
+        data (torch.tensor): Input data
+
+    Returns:
+        dict: Metric dict
+    """
     model.eval()
     model.to("cpu")
 
